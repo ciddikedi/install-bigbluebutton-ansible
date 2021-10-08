@@ -1,0 +1,6 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: apply turn config
+  template:
+    src: turn-stun-servers.xml.j2
+    dest: /usr/share/bbb-web/WEB-INF/classes/spring/turn-stun-servers.xml

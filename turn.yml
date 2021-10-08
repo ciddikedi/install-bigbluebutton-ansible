@@ -1,0 +1,16 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: turn
+  remote_user: root
+  gather_facts: yes
+  tasks:
+  - name: Deploy certificates
+    import_role: { name: certificates }
+    tags: turn-certs
+
+  - name: Install turn server
+    import_role: { name: turn }
+    tags: turn-server
+
+- import_playbook: turn_set.yml
+  tags: turn

@@ -1,0 +1,59 @@
+---
+#
+# NFS mount point
+#
+scalelite_datadir: "/mnt/scalelite-recordings"
+#
+# Big Blue button
+#
+bigbluebutton_config: 
+  webcamsOnlyForModerator: 'true' 
+  muteOnStart: 'true' 
+  allowModsToUnmuteUsers: 'true'
+  meetingExpireIfNoUserJoinedInMinutes: '20'
+  keepEvents: 'true'
+  defaultWelcomeMessageFooter: 'Ciddikedi sanal sınıfa hoşgeldiniz.'
+  allowRequestsWithoutSession: 'true'
+  meetingExpireWhenLastUserLeftInMinutes: '15'
+  usersTimeout: '300000'
+  enteredUsersTimeout: '300000'
+  defaultKeepEvents: 'true'
+ 
+bigbluebutton_camera_profiles: 
+- id: low
+  name: Low quality 
+  default: false 
+  bitrate: 50 
+- id: medium 
+  name: Medium quality 
+  default: true 
+  bitrate: 100 
+- id: high
+  name: High quality 
+  default: false 
+  bitrate: 200 
+- id: hd 
+  name: High definition 
+  default: false 
+  bitrate: 500
+#
+# Scalelite
+#
+# openssl rand -hex 64
+scalelite_secret_key: XXXXXXXXXXX
+# openssl rand -hex 32
+scalelite_loadbalancer_key: XXXXXXXXXXX
+# openssl rand -hex 16
+turn_secret_key: XXXXXXXXXXX
+
+stun_server: stun.l.google.com:19302
+stun_ip: 172.217.212.127
+stun_port: 19302
+scalelite_db_docker: yes
+recording_worker: 2
+bbb_version: bionic-230
+#scalelite_db_docker: no 
+#scalelite_db_host: bdd-scalelite.example.com 
+#scalelite_db_user: scalelite 
+#scalelite_db_pass: FIXIT 
+#scalelite_db_name: scalelite

@@ -1,0 +1,24 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: bigbluebutton
+  remote_user: root
+  gather_facts: yes
+  tasks:
+  - name: set hostname
+    import_role: { name: requirements, tasks_from: set_hostname }
+    tags: info
+
+- import_playbook: bigbluebutton.yml
+  tags: bigbluebutton
+- import_playbook: turn_set.yml
+  tags: turn
+- import_playbook: get_info.yml
+  tags: info
+- import_playbook: nfs_connect.yml
+  tags: nfs
+- import_playbook: monitoring.yml
+  tags: monitoring
+- import_playbook: customize.yml
+  tags: customize
+- import_playbook: restart.yml
+  tags: restart

@@ -1,0 +1,94 @@
+---
+- set_fact:
+    desired_hostname: "{{ inventory_hostname }}"
+
+- name: Install Prerequisites
+  apt:
+    update_cache: yes
+    name:
+      - net-tools
+      - language-pack-en
+      - lsb-release
+      - python3
+      - python3-apt
+      - python-apt
+      - haveged
+      - dbus
+      - wget
+    state: present
+    force_apt_get: yes
+
+- name: Change locale
+  locale_gen:
+    name: tr_TR.UTF-8
+    state: present
+
+- name: Configure firewall
+  when: bigbluebutton_configure_firewall|bool
+  include_tasks: firewall.yml
+
+- name: Warn user
+  run_once: yes
+  debug:
+    msg: >
+      Ready to run wget -qO- https://ubuntu.bigbluebutton.org/bbb-install.sh | bash -s -- -v {{ bbb_version }} {{ inventory_hostname }} -d
+      This takes around 15 mns
+
+- name: Launch install script
+  shell: wget -qO- https://ubuntu.bigbluebutton.org/bbb-install.sh | bash -s -- -v {{ bbb_version }} -s {{ inventory_hostname }} -d
+  become: yes
+
+- name: Install dependencies
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg2
+      - software-properties-common
+    state: present
+
+- name: Running setip
+  shell: "bbb-conf --setip {{ desired_hostname }}"
+
+- name: Configure Big Blue Button
+  lineinfile:
+    regexp: '^{{ item.key }}='
+    line: "{{item.key }}={{ item.value }}"
+    path: /usr/share/bbb-web/WEB-INF/classes/bigbluebutton.properties
+    state: present
+  loop: "{{ bigbluebutton_config|dict2items }}"
+  notify: restart bigbluebutton
+
+- name: Modify webrtc value
+  command: yq w -i /usr/local/bigbluebutton/bbb-webrtc-sfu/config/default.yml {{ item.key }} "{{ item.value }}"
+  loop: "{{ bigbluebutton_webrtc|dict2items }}"
+  notify: restart bigbluebutton
+
+- name: Change default presentation
+  copy:
+    src: files/default.pdf
+    dest: /var/www/bigbluebutton-default/default.pdf
+    mode: +r
+
+- name: Manage camera profiles
+  when: bigbluebutton_camera_profiles is defined
+  block:
+  - name: Generate yq script for camera profile
+    copy:
+      dest: /var/cache/yq_cameraProfiles.yml
+      content: |
+        - command: update
+          path: public.kurento.cameraProfiles
+          value:
+          {{ bigbluebutton_camera_profiles|to_nice_yaml|indent(2) }}
+    notify: restart bigbluebutton
+
+  - name: Set camera profiles
+    command: >-
+      yq w
+      -i
+      -s /var/cache/yq_cameraProfiles.yml
+      /usr/share/meteor/bundle/programs/server/assets/app/config/settings.yml
+
+- include_tasks: ssl.yml

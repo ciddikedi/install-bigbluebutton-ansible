@@ -1,0 +1,13 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: bigbluebutton
+  remote_user: root
+  gather_facts: yes
+  tasks:
+  - name: apply cronjobs
+    import_role: { name: customize, tasks_from: cron }
+    tags: customize
+  
+  - name: Apply customizations
+    import_role: { name: customize }
+    tags: customize

@@ -1,0 +1,9 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: bigbluebutton
+  remote_user: root
+  gather_facts: yes
+  tasks:
+  - name: connect nfs client
+    import_role: { name: nfs, tasks_from: bbb }
+    tags: nfs

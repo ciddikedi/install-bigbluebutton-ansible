@@ -1,0 +1,9 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: scalelite
+  remote_user: root
+  gather_facts: yes
+  tasks:
+  - name: set hostname
+    import_role: { name: requirements, tasks_from: get_info }
+    tags: info

@@ -1,0 +1,26 @@
+---
+- name: Create Nginx ssl dir
+  file:
+    path: /etc/nginx/ssl
+    state: directory
+    mode: '0755'
+
+- name: Generate dhparam
+  shell: openssl dhparam -out /etc/nginx/ssl/dhp-1024.pem 1024
+  args:
+    creates: /etc/nginx/ssl/dhp-1024.pem
+
+- name: Configure Nginx for SSL
+  template:
+    src: bigbluebutton.j2
+    dest: /etc/nginx/sites-available/bigbluebutton
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+    force: yes
+
+- name: Restart Nginx
+  service:
+    name: nginx
+    state: restarted

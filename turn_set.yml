@@ -1,0 +1,10 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: bigbluebutton
+  remote_user: root
+  gather_facts: yes
+  tasks:
+  - name: Set turn config
+    import_role: { name: bigbluebutton, tasks_from: turn }
+    tags: turn-server
+    when: (groups['turn'][0] in groups['turn']) 

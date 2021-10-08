@@ -1,0 +1,25 @@
+version: '3.2'
+services:
+  bbb-exporter:
+    container_name: "bbb-exporter"
+    image: greenstatic/bigbluebutton-exporter
+    ports:
+      - 9688:9688
+    environment:
+      - "API_BASE_URL=https://{{ inventory_hostname }}/bigbluebutton/api/"
+      - "API_SECRET={{ bbb_secret.stdout }}"
+    restart: unless-stopped
+  node_exporter:
+    container_name: node_exporter
+    image: prom/node-exporter:v0.18.1
+    network_mode: host
+    command:
+      - "--path.rootfs=/host"
+      - "--web.listen-address=0.0.0.0:9100"
+    pid: "host"
+    volumes:
+      - type: "bind"
+        source: "/"
+        target: "/host"
+        read_only: true
+    restart: unless-stopped

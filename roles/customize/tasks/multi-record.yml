@@ -1,0 +1,16 @@
+---
+- name: copy bbb-rap-resque-worker.service
+  template:
+    src: bbb-rap-resque-worker.service.j2
+    dest: /usr/lib/systemd/system/bbb-rap-resque-worker.service
+    owner: root
+
+- name: run daemon reload
+  become: True
+  shell:
+    cmd: "systemctl daemon-reload"
+
+- name: run restart recorder service
+  become: True
+  shell:
+    cmd: "systemctl restart bbb-rap-resque-worker.service"

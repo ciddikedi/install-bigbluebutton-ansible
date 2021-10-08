@@ -1,0 +1,5 @@
+---
+- name: add lines to hosts file
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ ip }} {{ hostname }}"

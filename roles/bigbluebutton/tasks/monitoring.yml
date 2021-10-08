@@ -1,0 +1,14 @@
+---
+- name: Retrieve bbb secret
+  tags: prometheus
+  shell: 'bbb-conf --secret | grep -o "Secret:.*$" | grep -o "[^ ]*$"'
+  register: bbb_secret
+
+- name: Generate docker-compose.yml file for prometheus
+  tags: prometheus
+  template:
+    src: docker-compose.yml.j2
+    dest: /root/docker-compose.yml
+
+- name: docker-compose up
+  shell: docker-compose -f /root/docker-compose.yml up -d

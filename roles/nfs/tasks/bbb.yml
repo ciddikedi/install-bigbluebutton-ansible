@@ -1,0 +1,21 @@
+- name: Install the package "nfs-common"
+  apt:
+    name: nfs-common
+    state: present
+
+- name: Generate fstab
+  tags: nfs
+  lineinfile:
+    path: /etc/fstab
+    line: "{{ hostvars[groups['scalelite'][0]].nfs_server.stdout }}:{{ scalelite_datadir }} /mnt/scalelite-recordings nfs defaults 0 0"
+
+- name: Creates directory
+  ignore_errors: yes
+  file:
+    path: /mnt/scalelite-recordings
+    state: directory
+
+- name: run script
+  become: True
+  shell:
+    cmd: "mount -a"

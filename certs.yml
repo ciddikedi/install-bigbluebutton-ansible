@@ -1,0 +1,9 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: all
+  remote_user: root
+  gather_facts: yes
+  tasks:
+  - name: Deploy certificates
+    import_role: { name: certificates }
+    tags: bigbluebutton-certs

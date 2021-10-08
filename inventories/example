@@ -1,0 +1,11 @@
+[bigbluebutton]
+bbbtest.ciddikedi.com
+
+[scalelite]
+bbbmain4.ciddikedi.com
+
+[turn]
+turnmain.ciddikedi.com
+
+[bigbluebutton:vars]
+ansible_ssh_user=root

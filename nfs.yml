@@ -1,0 +1,12 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: scalelite
+  remote_user: root
+  gather_facts: yes
+  tasks:
+  - name: install nfs server
+    import_role: { name: nfs }
+    tags: nfs
+
+- import_playbook: nfs_connect.yml
+  tags: nfs

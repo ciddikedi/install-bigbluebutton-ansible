@@ -1,0 +1,19 @@
+---
+scalelite_datadir: /mnt/scalelite-recordings
+
+# openssl rand -hex 64
+#scalelite_secret_key:
+# openssl rand -hex 32
+#scalelite_loadbalancer_key:
+
+scalelite_db_docker: yes
+# only if scalelite_db_docker is false
+#scalelite_db_host:
+scalelite_db_user: scalelite
+scalelite_db_pass: scalelite
+scalelite_db_name: scalelite
+scalelite_db_init: yes
+
+scalelite_redis_docker: yes
+# only if scalelite_db_redis is false
+#scalelite_redis_host:

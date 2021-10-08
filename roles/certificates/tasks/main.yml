@@ -1,0 +1,53 @@
+---
+# If none of the variables ssl_certs_path and ssl_private are defined,
+# take default values based on os family.
+# Note: if theses variables are defined outside of the role, both variables
+# must be defined.
+- name: Include OS specific variables.
+  include_vars: defaults/{{ ansible_os_family }}.yml
+  when:
+    - ssl_certs_path is not defined
+    - ssl_private_path is not defined
+- name: Ensure both paths are defined.
+  assert:
+    that:
+      - ssl_certs_path is defined
+      - ssl_private_path is defined
+    msg: When declaring paths manually, be sure to declare both certs and private path.
+
+- name: Ensure ca-certificates is installed.
+  package:
+    state: present
+    name: ca-certificates
+
+- name: Ensure certs and private directory exists.
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ ssl_certs_path }}"
+    - "{{ ssl_private_path }}"
+
+- name: Deploy private keys.
+  copy:
+    src: "{{ certificates_dir }}/{{ item }}/privkey"
+    dest: "{{ ssl_private_path + '/' + certificates + '.key' }}"
+    owner: root
+    group: root
+    mode: "0600"
+  with_items: "{{ inventory_hostname.split('.', 1)[1] }}"
+
+- name: Deploy concatenated certificate.
+  copy:
+    src: "{{ certificates_dir }}/{{ item }}/fullchain"
+    dest: "{{ ssl_certs_path + '/' + certificates + '.pem' }}"
+    owner: root
+    group: root
+    mode: "0644"
+  with_items: "{{ inventory_hostname.split('.', 1)[1] }}"
+
+- name: Set certificates deployment paths as fact.
+  set_fact:
+    "{{ item|regex_replace('[^a-zA-Z0-9_]', '_') + '_key_path' }}": "{{ ssl_private_path + '/' + item + '.key' }}"
+    "{{ item|regex_replace('[^a-zA-Z0-9_]', '_') + '_pem_path' }}": "{{ ssl_certs_path + '/' + item + '.pem' }}"
+  with_items: "{{ certificates }}"

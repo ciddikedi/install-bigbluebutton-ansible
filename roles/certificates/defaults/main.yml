@@ -1,0 +1,3 @@
+---
+certificates_dir: "{{ inventory_dir }}/group_vars/certs" 
+certificates: "uzep"

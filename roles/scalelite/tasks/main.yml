@@ -1,0 +1,116 @@
+---
+- name: Check for required variables
+  loop:
+  - scalelite_secret_key
+  - scalelite_loadbalancer_key
+  when: item not in vars
+  fail:
+    msg: "missing required variable: {{ item }}"
+
+- name: Create scalelite group
+  loop: "{{ groups.bigbluebutton }}"
+  delegate_to: "{{ item }}"
+  group:
+    name: scalelite-spool
+    gid: 2000
+
+- name: Add bigbluebutton user to group
+  loop: "{{ groups.bigbluebutton }}"
+  delegate_to: "{{ item }}"
+  user:
+    name: bigbluebutton
+    groups: scalelite-spool
+    append: yes
+
+- name: Create spool directory
+  file:
+    state: directory
+    path: "{{ scalelite_datadir }}/var/bigbluebutton/spool"
+    owner: 1000
+    group: 2000
+    mode: '0777'
+    recurse: yes
+
+- name: Create working directory
+  file:
+    state: directory
+    path: "{{ scalelite_datadir }}/var/bigbluebutton/recording/scalelite"
+    owner: 1000
+    group: 2000
+    mode: '0777'
+    recurse: yes
+
+- name: Create published directory
+  file:
+    state: directory
+    path: "{{ scalelite_datadir }}/var/bigbluebutton/published"
+    owner: 1000
+    group: 1000
+    mode: '0777'
+    recurse: yes
+
+- name: Create unpublished directory
+  file:
+    state: directory
+    path: "{{ scalelite_datadir }}/var/bigbluebutton/unpublished"
+    owner: 1000
+    group: 1000
+    mode: '0777'
+    recurse: yes
+
+- name: Generate docker-compose.yml file
+  template:
+    src: docker-compose.yml.j2
+    dest: /root/docker-compose.yml
+
+- name: docker-compose up
+  shell: docker-compose -f /root/docker-compose.yml up -d
+
+- name: Initialize Scalelite database
+  when: scalelite_db_init|bool
+  ignore_errors: True
+  # https://stackoverflow.com/questions/10301794/difference-between-rake-dbmigrate-dbreset-and-dbschemaload
+  command: >-
+    docker exec -it scalelite-api bin/rake
+    {% if scalelite_db_docker %}db:create{% endif %} db:schema:load db:seed
+
+- name: Retrieve bigbluebutton secret keys
+  delegate_to: "{{ item }}"
+  shell: 'bbb-conf --secret | grep -o "Secret:.*$" | grep -o "[^ ]*$"'
+  register: secret_keys
+  loop: "{{ groups.bigbluebutton }}"
+
+- name: Retrieve servers status
+  loop: "{{ groups.bigbluebutton }}"
+  shell: >-
+    docker exec scalelite-api
+    ./bin/rake servers
+    | grep -o "{{ item }}"
+  ignore_errors: yes
+  register: servers
+
+- name: Register the host to scalelite
+  loop: "{{ secret_keys.results|flatten(levels=1) }}"
+  loop_control:
+    index_var: index
+  when: servers.results[index].rc != 0
+  include_tasks: register.yml
+  vars:
+    hostname: "{{ item.item }}"
+    key: "{{ item.stdout }}"
+
+- name: Get internal ip from bbb servers
+  delegate_to: "{{ item }}"
+  shell: >-
+    ip route get 1 | sed -n 's/^.*src \([0-9.]*\) .*$/\1/p'
+  register: internal
+  loop: "{{ groups.bigbluebutton }}"
+  
+- name: Add bbb internal ip to hosts
+  loop: "{{ internal.results|flatten(levels=1) }}"
+  loop_control:
+    index_var: index
+  include_tasks: addhosts.yml
+  vars:
+    hostname: "{{ item.item }}"
+    ip: "{{ item.stdout }}"

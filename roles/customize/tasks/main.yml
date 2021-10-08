@@ -1,0 +1,72 @@
+---
+- name: copy scalelite postpublish
+  copy:
+    src: files/scalelite_post_publish.rb
+    dest: /usr/local/bigbluebutton/core/scripts/post_publish/scalelite_post_publish.rb
+    owner: root
+    mode: +x
+    
+- name: copy batch import
+  copy:
+    src: files/scalelite_batch_import.sh
+    dest: /root/scalelite_batch_import.sh
+    owner: root
+    mode: +x
+    
+- name: copy rebuild-non-presentation.sh
+  copy:
+    src: rebuild-non-presentation.sh
+    dest: /root/rebuild-non-presentation.sh
+    owner: root
+    mode: +x
+    
+- name: copy post_publish
+  copy:
+    src: post_publish.rb
+    dest: /usr/local/bigbluebutton/core/scripts/post_publish/post_publish.rb
+    owner: root
+    mode: +x
+    
+- name: copy video.rb
+  copy:
+    src: video.rb
+    dest: /usr/local/bigbluebutton/core/lib/recordandplayback/generators/video.rb
+    owner: root
+    mode: +x
+    
+- name: copy presentation.yml
+  copy:
+    src: presentation.yml
+    dest: /usr/local/bigbluebutton/core/scripts/presentation.yml
+    owner: root
+
+- name: Deploy scalelite scalelite.yml file
+  template:
+    src: scalelite.yml.j2
+    dest: /usr/local/bigbluebutton/core/scripts/scalelite.yml
+
+- name: Update apt-get repo and cache
+  apt: update_cache=yes
+
+- name: Install the package bbb-webhooks
+  apt:
+    name: bbb-webhooks
+    state: present
+
+- name: Install the package openjdk-8-jdk-headless
+  apt:
+    name: openjdk-8-jdk-headless
+    state: present
+
+- name: fix special characters
+  become: True
+  shell:
+    cmd: 'native2ascii "/usr/share/bbb-web/WEB-INF/classes/bigbluebutton.properties" "/usr/share/bbb-web/WEB-INF/classes/bigbluebutton.properties"'
+
+- name: Remove bbb-demo
+  apt:
+    name: bbb-demo
+    state: absent
+    purge: yes
+
+- include_tasks: multi-record.yml
